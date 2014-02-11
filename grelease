@@ -1,0 +1,134 @@
+#!/bin/bash
+#
+# Grelease - Quickly create a tarball of a git repository
+# Copyright (C) 2014  Chris Sivanich <chris@sivanich.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+usage(){
+    echo "Grelease (C) 2014 Chris Sivanich - <chris@sivanich.com>"
+    echo "Quickly create a releasable tarball of an existing git repository in"
+    echo "package-version.tar.gz format"
+    echo ""
+    echo "Usage $0 DIR <GIT> <OUTPUT> [OPTION] ..."
+    echo "Options:"
+    echo "-p NAME   Set the output package name"
+    echo "-o DIR    Set output package directory (default ../REPO)"
+    echo "-V STRING Set the output version string"
+    echo "-v        Verbose mode"
+    echo "-h        Show this message"
+}
+
+#Take repository location as first argument
+REPO=${1%/}
+shift
+
+#Take version string as second argument
+COMMIT=${1:-"HEAD"}
+shift
+
+VERSION=$COMMIT
+
+#Default package name is repo location
+PACKAGE=$REPO
+OPTIONS=""
+while getopts "vp:ho:V:" OPTION
+do
+    case $OPTION in
+        V)
+            VERSION=$OPTARG
+            ;;
+        v)
+            VERBOSE=1
+            OPTIONS=$OPTIONS"v"
+            ;;
+        p)
+            PACKAGE=$OPTARG
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        o)
+            dir=${OPTARG%/}
+            if [ -d $dir ]
+            then
+                OUTPUT=$dir
+            else
+                echo "$dir is not a valid directory"
+                exit 1
+            fi
+    esac
+done
+
+if [ $VERBOSE ]
+then
+    echo "REPO: $REPO"
+    echo "COMMIT: $COMMIT"
+    echo "VERSION: $VERSION"
+    echo "PACKAGE: $PACKAGE"
+    echo "OPTIONS: ($OPTIONS)"
+fi
+
+#Set the tarball name and directory to create
+DIR="$PACKAGE-$VERSION"
+ARCHIVE=$DIR".tar.gz"
+
+if [ -z "$REPO" ] || [ -z "$VERSION" ]
+then
+    usage
+    exit 1
+fi
+
+if [ -d $REPO ]
+then
+    [ $VERBOSE ] && echo "Entering $REPO"
+    cd $REPO
+else
+    echo "Directory $REPO not found"
+    exit 1
+fi
+
+[ $VERBOSE ] && echo "Archiving commit $COMMIT to $ARCHIVE"
+#Archive our repository from the given commit to the provided location
+git archive --format=tar.gz -o "../$ARCHIVE" "$COMMIT"
+[ $? -ne 0 ] && echo "Error: Git archive command failed!" && exit 1
+
+
+#Go up and create new package-version folder if it doesn't already exist
+cd ../
+if [ -d $DIR ]
+then
+    echo "Warning: directory $DIR already exists, continue at own risk"
+else
+    [ $VERBOSE ] && echo "Creating directory $DIR"
+    mkdir -$OPTIONS $DIR
+fi
+cd $DIR
+
+#Untar the archive into our new folder
+tar -$OPTIONS\xzf ../$ARCHIVE
+cd ..
+
+#Recreate our archive with the correct layout and name
+tar -$OPTIONS\zcf $ARCHIVE $DIR
+
+#Remove temp folder
+rm -rf$OPTIONS $DIR
+
+#If $OUTPUT is set, move the archive somewhere else
+[ -n "$OUTPUT" ] && mv -$OPTIONS $ARCHIVE $OUTPUT/
+
+echo "Done creating release '$DIR'"
+exit 0
