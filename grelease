@@ -21,7 +21,7 @@ usage(){
     echo "Quickly create a releasable tarball of an existing git repository in"
     echo "package-version.tar.gz format"
     echo ""
-    echo "Usage $0 DIR <GIT> <OUTPUT> [OPTION] ..."
+    echo "Usage $0 DIR COMMIT [OPTIONS] ..."
     echo "Options:"
     echo "-p NAME   Set the output package name"
     echo "-o DIR    Set output package directory (default ../REPO)"
