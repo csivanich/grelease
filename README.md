@@ -14,13 +14,17 @@ It is recommended that you move it into your $PATH for easy access anywhere, but
 Usage
 ======
 From `grelease -h`:
->grelease DIR COMMIT [OPTIONS] ...
+
+```
+grelease DIR COMMIT [OPTIONS] ...
+
 Options:
 -p NAME   Set the output package name
 -o DIR    Set output package directory (default ../REPO)
 -V STRING Set the output version string
 -v        Verbose mode
 -h        Show this message
+```
 
 Examples
 ======
