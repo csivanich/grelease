@@ -37,3 +37,9 @@ Examples
 
 #### Setting the tarball output location
 `grelease repo 1.0.0 -o ~/some/dir`
+
+Known Issues
+======
+
+- Submodules will not be archived (this may be added later)
+- Occasionally a `-` directory will be made during the archive. I'm looking into this why this is.
